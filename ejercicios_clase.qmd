@@ -35,13 +35,6 @@ estudiantes[estudiantes$promedio_final >= 7, ]
 estudiantes[pmax(estudiantes$nota1, estudiantes$nota2, estudiantes$nota3) < 5, ]
 ```
 
-```{python}
-#-------------- EJERCICIO 2 - PYTHON --------------
-#Orden: Complete el dataframe de las notas de 5 estudiantes, sus tres notas parciales y calcule una columna “promedio_final”. Se pide: a. Filtrar a los estudiantes que aprueban (promedio_final >= 7)    b. Filtrar a los estudiantes cuya máxima nota parcial es inferior a 5 (reprobados).
-
-
-
-```
 
 ```{r}
 #-------------- EJERCICIO 3 / R --------------
