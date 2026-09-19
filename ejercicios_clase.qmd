@@ -1,6 +1,6 @@
 ```{r}
 
-#-------------- EJERCICIO 1 --------------
+#-------------- EJERCICIO 1 - R --------------
 #Orden: Crea un vector/array con las edades de 8 personas de tu elección. Calcular la edad máxima, mínima y la desviación estándar.
 
 edades <- c(20, 21, 24, 25, 22, 19, 28, 30)
@@ -12,6 +12,13 @@ minima <- min(edades)
 desviacion <- sd(edades)
 # Impresión de resultados
 cat("Máx: ", maxima, "Mín: ", minima, "Std: ", desviacion)
+```
+```{python}
+#-------------- EJERCICIO 1 - PYTHON --------------
+#Orden: Crea un vector/array con las edades de 8 personas de tu elección. Calcular la edad máxima, mínima y la desviación estándar.
+
+
+
 ```
 
 ```{r}
@@ -33,6 +40,14 @@ estudiantes[estudiantes$promedio_final >= 7, ]
 
 # Filtrar a los estudiantes reprobados (máxima nota parcial inferior a 5)
 estudiantes[pmax(estudiantes$nota1, estudiantes$nota2, estudiantes$nota3) < 5, ]
+```
+
+```{python}
+#-------------- EJERCICIO 2 - PYTHON --------------
+#Orden: Complete el dataframe de las notas de 5 estudiantes, sus tres notas parciales y calcule una columna “promedio_final”. Se pide: a. Filtrar a los estudiantes que aprueban (promedio_final >= 7)    b. Filtrar a los estudiantes cuya máxima nota parcial es inferior a 5 (reprobados).
+
+
+
 ```
 
 ```{r}
@@ -175,3 +190,4 @@ print("Lectura desde Excel:")
 print(data)
 
 ```
+
