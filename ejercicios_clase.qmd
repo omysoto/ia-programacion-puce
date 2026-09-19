@@ -1,0 +1,177 @@
+```{r}
+
+#-------------- EJERCICIO 1 --------------
+#Orden: Crea un vector/array con las edades de 8 personas de tu elección. Calcular la edad máxima, mínima y la desviación estándar.
+
+edades <- c(20, 21, 24, 25, 22, 19, 28, 30)
+# Edad máxima
+maxima <- max(edades)
+# Edad mínima
+minima <- min(edades)
+# Desviación estándar
+desviacion <- sd(edades)
+# Impresión de resultados
+cat("Máx: ", maxima, "Mín: ", minima, "Std: ", desviacion)
+```
+
+```{r}
+#-------------- EJERCICIO 2 / R --------------
+#Orden: Complete el dataframe de las notas de 5 estudiantes, sus tres notas parciales y calcule una columna “promedio_final”. Se pide: a. Filtrar a los estudiantes que aprueban (promedio_final >= 7)    b. Filtrar a los estudiantes cuya máxima nota parcial es inferior a 5 (reprobados).
+
+# Dataframe de notas 
+estudiantes <- data.frame(
+      nombres = c("Luis", "Jaime", "David", "Ana", "María"),
+      nota1 = c(8, 4, 9, 7, 6),
+      nota2 = c(7, 4, 8, 8, 5),
+      nota3 = c(9, 3, 10, 8, 7))
+
+# Cálculo del promedio final
+estudiantes$promedio_final <- (estudiantes$nota1 + estudiantes$nota2 + estudiantes$nota3) / 3
+
+# Filtrar a los estudiantes aprobados
+estudiantes[estudiantes$promedio_final >= 7, ]
+
+# Filtrar a los estudiantes reprobados (máxima nota parcial inferior a 5)
+estudiantes[pmax(estudiantes$nota1, estudiantes$nota2, estudiantes$nota3) < 5, ]
+```
+
+```{r}
+#-------------- EJERCICIO 3 / R --------------
+#Orden: Ejemplo 3: A continuación se presenta un conjunto de datos correspondiente al historial crediticio de 10 solicitantes de crédito en una institución financiera ecuatoriana. Se pide:
+#       a. Agregar la columna “evaluación” que determine si la solicitud es “Aprobado” (si los ingresos son mayores o iguales a 1800 y el puntaje de crédito es mayor a 650) o “Rechazado” en caso contrario.
+#       b. Agregar la columna “segmento_riesgo” utilizando las siguientes reglas: - Bajo: si el puntaje es mayor a 750. - Medio: si el puntaje está entre 600 y 750 (inclusive). - Alto: si el puntaje es menor a 600.
+#       c. Filtrar el data frame para mostrar únicamente los clientes cuyo segmento de riesgo sea “Alto” o hayan sido “Rechazado”.
+
+# Variables de entrada
+tipo_cliente <- "VIP"
+monto_compra <- 180
+tiene_cupon <- FALSE
+
+# Condicionales
+if ((tipo_cliente == "VIP" && monto_compra > 150) || tiene_cupon == TRUE) {
+  descuento <- 0.20
+} else if ((tipo_cliente == "VIP" && monto_compra <= 150) || (tipo_cliente == "Estándar" && monto_compra > 200)) {
+  descuento <- 0.10
+} else {
+  descuento <- 0
+}
+
+# Salida
+monto_final <- monto_compra * (1 - descuento)
+cat("Descuento aplicado:", descuento * 100, "%\n")
+cat("Monto final a pagar: $", monto_final, "\n")
+```
+```{r}
+#-------------- EJERCICIO 4 / R --------------
+#Orden:La serie de Leibniz permite calcular una aproximación del valor de pi a través de una suma infinita de términos alternados:
+#       a.Escriba un código que permita calcular la aproximación de pi sumando los primeros N términos de la serie.
+
+# Variables de entrada
+N <- 10000
+# Suma de los primeros N términos
+suma <- 0
+for(k in 0:N){
+  suma <- suma + ((-1)^k) / (2 * k + 1)
+}
+
+pi_aprox <- suma * 4
+cat("Aproximación de pi:", pi_aprox, "\n")
+```
+
+```{r}
+#-------------- EJERCICIO 5 / R --------------
+#Orden: Escriba un código que reciba un número entero positivo y verifique experimentalmente el Teorema de Nicómaco que establece la siguiente identidad matemática:
+
+# Variables de entrada
+n <- 5
+suma_cubos <- 0
+suma_base <- 0
+
+# Sentencia repetitiva
+for(i in 1:n){
+  suma_cubos <- suma_cubos + (i^3)
+  suma_base <- suma_base + i
+}
+
+cuadrado_suma <- suma_base^2
+
+cat("Suma de cubos:", suma_cubos, "\n")
+cat("Cuadrado de la suma:", cuadrado_suma, "\n")
+cat("¿Se cumple la igualdad?:", suma_cubos == cuadrado_suma, "\n")
+```
+
+```{r}
+#-------------- EJERCICIO 6 / R --------------
+#Orden: Crear una función que reciba un número entero n>0 y devuelva TRUE/True si es primo, FALSE/False en caso contrario.
+
+# 1. Definir la función
+es_primo <- function(n){
+  if (n <= 1) return(FALSE)
+  if (n == 2) return(TRUE)
+  if (n %% 2 == 0) return(FALSE)
+  
+  limite <- floor(sqrt(n))
+  if (limite >= 3) {
+    for (i in seq(3, limite, by = 2)){
+      if (n %% i == 0) return(FALSE)
+    }
+  }
+  return(TRUE)
+}
+# 2. SEGUNDO: Uso de la función
+es_primo(7)   
+es_primo(10)  
+es_primo(13)  
+```
+
+```{r}
+#-------------- EJERCICIO 7 / R --------------
+#Orden:Utilizando la función es_primo definida previamente, escriba una nueva función que reciba dos enteros a y b (con a<=b) y devuelva la cantidad total de números primos contenidos en el intervalo cerrado [a,b]
+
+contar_primos <- function(a, b) {
+  contador <- 0
+  for (i in a:b) {
+    if (es_primo(i)) {
+      contador <- contador + 1
+    }
+  }
+  return(contador)
+}
+
+contar_primos(1, 10) 
+```
+
+```{r}
+#-------------- EJERCICIO 8 / R --------------
+#Orden: Crear un archivo de texto plano y excel con información de 7 países (país, capital, idioma, población, moneda), léalo de vuelta y guárdalo en un dataframe llamado “data”.
+
+# 1. Cargar librería para Excel 
+#install.packages("openxlsx") INSTALAR UNA SOLA VEZ, QUITAR EL "#" Y EJECUTAR
+library(openxlsx) # Para escribir Excel
+library(readxl)   # Para leer Excel
+
+# 2. Crear dataframe con 7 países
+paises_df <- data.frame(
+  pais = c("Ecuador", "Colombia", "Perú", "Chile", "Argentina", "Brasil", "Uruguay"),
+  capital = c("Quito", "Bogotá", "Lima", "Santiago", "Buenos Aires", "Brasilia", "Montevideo"),
+  idioma = c("Español", "Español", "Español", "Español", "Español", "Portugués", "Español"),
+  poblacion = c(17.7, 51.5, 33.7, 19.4, 45.8, 214.3, 3.4), # en millones
+  moneda = c("Dólar", "Peso", "Sol", "Peso", "Peso", "Real", "Peso")
+)
+
+# 3. Guardar la información en texto plano (.csv) y en Excel (.xlsx)
+# row.names = FALSE evita que se guarde una columna extra con los números de fila
+write.csv(paises_df, "paises_temp.csv", row.names = FALSE)
+write.xlsx(paises_df, "paises_temp.xlsx")
+
+# 4. A: Leer de vuelta el CSV
+data_csv <- read.csv("paises_temp.csv")
+
+# 4. B: Leer de vuelta el Excel
+data <- readxl::read_excel("paises_temp.xlsx")
+
+# 5. Imprimimos para verificar
+print("Lectura desde Excel:")
+print(data)
+
+```
