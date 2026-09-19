@@ -13,13 +13,6 @@ desviacion <- sd(edades)
 # Impresión de resultados
 cat("Máx: ", maxima, "Mín: ", minima, "Std: ", desviacion)
 ```
-```{python}
-#-------------- EJERCICIO 1 - PYTHON --------------
-#Orden: Crea un vector/array con las edades de 8 personas de tu elección. Calcular la edad máxima, mínima y la desviación estándar.
-
-
-
-```
 
 ```{r}
 #-------------- EJERCICIO 2 / R --------------
