@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ```{r setup, include=FALSE}
 library(reticulate)
 use_virtualenv("./.venv", required = TRUE)
@@ -7,6 +8,11 @@ use_virtualenv("./.venv", required = TRUE)
 
 
 #-------------- EJERCICIO 1 --------------
+=======
+```{r}
+
+#-------------- EJERCICIO 1 - R --------------
+>>>>>>> 6cbf204a2913b2cb9c31265ca693872bec8a1f38
 #Orden: Crea un vector/array con las edades de 8 personas de tu elección. Calcular la edad máxima, mínima y la desviación estándar.
 
 edades <- c(20, 21, 24, 25, 22, 19, 28, 30)
@@ -19,6 +25,7 @@ desviacion <- sd(edades)
 # Impresión de resultados
 cat("Máx: ", maxima, "Mín: ", minima, "Std: ", desviacion)
 ```
+<<<<<<< HEAD
 ## --- Solución en Python ---
 ```{python}
 import numpy as np
@@ -34,6 +41,9 @@ desviacion = np.std(edades, ddof=1)
 # Impresión de resultados
 print(f"Máx: {maxima}, Mín: {minima}, Std: {desviacion:.2f}")
 ```
+=======
+
+>>>>>>> 6cbf204a2913b2cb9c31265ca693872bec8a1f38
 ```{r}
 #-------------- EJERCICIO 2 / R --------------
 #Orden: Complete el dataframe de las notas de 5 estudiantes, sus tres notas parciales y calcule una columna “promedio_final”. Se pide: a. Filtrar a los estudiantes que aprueban (promedio_final >= 7)    b. Filtrar a los estudiantes cuya máxima nota parcial es inferior a 5 (reprobados).
@@ -163,7 +173,10 @@ contar_primos <- function(a, b) {
 contar_primos(1, 10) 
 ```
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6cbf204a2913b2cb9c31265ca693872bec8a1f38
 ```{r}
 #-------------- EJERCICIO 8 / R --------------
 #Orden: Crear un archivo de texto plano y excel con información de 7 países (país, capital, idioma, población, moneda), léalo de vuelta y guárdalo en un dataframe llamado “data”.
@@ -198,3 +211,7 @@ print("Lectura desde Excel:")
 print(data)
 
 ```
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6cbf204a2913b2cb9c31265ca693872bec8a1f38
