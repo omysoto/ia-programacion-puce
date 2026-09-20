@@ -62,6 +62,7 @@ monto_final <- monto_compra * (1 - descuento)
 cat("Descuento aplicado:", descuento * 100, "%\n")
 cat("Monto final a pagar: $", monto_final, "\n")
 ```
+
 ```{r}
 #-------------- EJERCICIO 4 / R --------------
 #Orden:La serie de Leibniz permite calcular una aproximación del valor de pi a través de una suma infinita de términos alternados:

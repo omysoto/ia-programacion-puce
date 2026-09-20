@@ -1,0 +1,395 @@
+---
+title: "Análisis de Seguros de Vehículos"
+format: html
+Integrantes del grupo: 
+    Estibh Pullas
+    Naomy Soto
+    Martín Valenzuela
+---
+
+## Fase 1: Tratamiento, Limpieza y Calidad de Datos
+### 1. Parseo de variables monetarias
+Las columnas Ingresos, ValorDomicilio, ValVehiculo
+y TCuantia están registradas con formato texto (incluyendo caracteres como $, comas y
+espacios). Escriba una función reutilizable en R o Python para transformar estas cuatro
+columnas a tipo numérico (numeric / float).
+```{r setup, message=FALSE, warning=FALSE}
+# 0. Carga de librerías y datos
+library(dplyr)
+library(stringr)
+
+# Recordamos usar sep = ";" para evitar el error de columnas
+datos_seguros <- read.csv("Seguros_Vehiculos.csv", sep = ";")
+
+# --- EL ANTES ---
+print("-----------------------------------------------------------------")
+print("ESTADO ORIGINAL DE LAS VARIABLES MONETARIAS (Texto con símbolos):")
+datos_seguros |> 
+  select(Ingresos, ValorDomicilio, ValVehiculo, TCuantia) |> 
+  head()
+
+# Notarás que debajo de los nombres de las columnas, R dirá <chr> (character/texto)
+
+# 1. Función de limpieza
+limpiar_moneda <- function(columna) {
+  # El patrón "[\\$, ]" busca y destruye dólares, comas y espacios
+  columna_limpia <- str_remove_all(columna, "[\\$, ]")
+  as.numeric(columna_limpia)
+}
+
+# Transformación de las 4 columnas
+datos_seguros <- datos_seguros |> 
+  mutate(across(c(Ingresos, ValorDomicilio, ValVehiculo, TCuantia), limpiar_moneda))
+
+# --- EL DESPUÉS ---
+print("-----------------------------------------------------------------")
+print("ESTADO TRANSFORMADO (Números limpios listos para operar):")
+datos_seguros |> 
+  select(Ingresos, ValorDomicilio, ValVehiculo, TCuantia) |> 
+  head()
+# Aquí la consola debe mostrar <dbl> (double/numérico) debajo de las columnas
+```
+    
+
+### 2. Tratamiento de valores nulos (NA/NaN)
+Identifique los valores faltantes en las
+variables Edad, AntiguedadTrabajo, Ingresos, ValorDomicilio, Trabajo y Antiguedad.
+Proponga e implemente una estrategia fundamentada de imputación (promedio, mínimo,
+máximo, mediana condicional por ocupación/educación) indicando el impacto de su método
+sobre las distribuciones originales.
+
+**Estrategia de limpieza de datos (Justificación de Negocio):**
+Para que nuestras predicciones de seguros sean precisas, necesitamos que la base de datos esté completa, pero sin "inventar" información que distorsione el perfil de nuestros clientes. Por ello, aplicamos dos reglas prácticas para rellenar los datos faltantes:
+
+1. **Tratamiento Categórico (Variable `Trabajo`):* Si una persona dejó en blanco su tipo de trabajo en el formulario, no podemos simplemente adivinar y asignarle la profesión más común, porque eso arruinaría nuestros perfiles de riesgo. Simplemente los agrupamos bajo la etiqueta de `"Desconocido"`. Saber que un cliente prefirió ocultar su ocupación es, de hecho, un comportamiento valioso que el modelo debe analizar.
+2. **Tratamiento Numérico (`Edad`, `AntiguedadTrabajo`, `Ingresos`, `ValorDomicilio`, `Antiguedad`):* Si nos falta el salario o el valor del vehículo de un cliente, evitamos usar un "promedio general". Promediar el sueldo de un gerente con el de un estudiante nos daría un número irreal que no representa a ninguno de los dos. En su lugar, buscamos el valor central (la mediana) *solo de las personas que tienen esa misma ocupación*. Así, si nos falta el sueldo de un médico, lo rellenamos basándonos estrictamente en lo que ganan los demás médicos de la base, logrando una estimación sumamente realista.
+
+**Impacto en el negocio:**
+Con este método, sellamos el 100% de los vacíos de información sin inyectar promedios falsos. La base de datos mantiene un comportamiento apegado a la realidad, asegurando que el cálculo de tarifas y la detección de riesgos se basen en perfiles de clientes verdaderos y no en ilusiones matemáticas.
+**Impacto sobre las distribuciones originales:**
+Al utilizar la mediana condicional por grupos en lugar de una media global, se preserva la varianza original y las colas naturales de la distribución. Esto previene la aparición de picos artificiales en el centro de los datos, garantizando que los modelos de severidad y frecuencia no subestimen el riesgo.
+
+```{r imputacion-nulos}
+# --- EL ANTES ---
+print("--------------------------------------------------")
+print("ESTADO ORIGINAL: Cantidad de datos faltantes (NAs) por variable")
+datos_seguros |> 
+  select(Edad, AntiguedadTrabajo, Ingresos, ValorDomicilio, Trabajo, Antiguedad) |> 
+  # Contamos NAs numéricos o espacios vacíos en texto
+  summarise(across(everything(), ~ sum(is.na(.) | trimws(.) == ""))) |> 
+  print()
+
+# Implementación de la estrategia de imputación
+datos_seguros <- datos_seguros |> 
+  # 1. Tratar vacíos en la variable Trabajo
+  mutate(Trabajo = ifelse(is.na(Trabajo) | trimws(Trabajo) == "", "Desconocido", Trabajo)) |> 
+  
+  # 2. Agrupar la base por ocupación
+  group_by(Trabajo) |> 
+  
+  # 3. Imputar las numéricas con la mediana específica de su grupo
+  mutate(across(c(Edad, AntiguedadTrabajo, Ingresos, ValorDomicilio, Antiguedad), 
+                ~ ifelse(is.na(.), median(., na.rm = TRUE), .))) |> 
+  
+  # 4. Desagrupar siempre al final para no dañar análisis futuros
+  ungroup()
+
+# --- EL DESPUÉS ---
+print("--------------------------------------------------")
+print("ESTADO TRANSFORMADO: NAs restantes tras la imputación condicional")
+datos_seguros |> 
+  select(Edad, AntiguedadTrabajo, Ingresos, ValorDomicilio, Trabajo, Antiguedad) |> 
+  summarise(across(everything(), ~ sum(is.na(.)))) |> 
+  print()
+```
+
+
+### 3. Estandarización categórica y consistencia
+Valide y recodifique las variables binarias
+(Soltero, ColorRojo, Suspensiones, ConducenHijos) a factores o tipos booleanos
+uniformes (1 identifica el caso afirmativo).
+
+**Justificación de Negocio:**
+En los formularios de seguros, un cliente o vendedor puede escribir que "Sí" es soltero de muchas formas: "Sí", "Si", "S", o incluso "Yes". Para un humano es lo mismo, pero para la computadora son respuestas totalmente distintas que arruinan los cálculos de riesgo. Para solucionar esto, pasamos estas columnas por un "embudo" que detecta cualquier tipo de afirmación y la convierte en un `1` matemático, y todo lo demás lo convierte en un `0`. Así garantizamos que el sistema lea la información de forma perfecta y uniforme.
+
+```{r estandarizacion-binaria, message=FALSE, warning=FALSE}
+library(tidyr) 
+
+# --- EL ANTES ---
+print("-----------------------------------------")
+print("ESTADO ORIGINAL: variaciones de respuesta")
+datos_seguros |> 
+  select(Soltero, ColorRojo, Suspensiones, ConducenHijos) |> 
+  # Forzamos todo a texto temporalmente para que la tabla no dé error al mezclar números y palabras
+  mutate(across(everything(), as.character)) |> 
+  pivot_longer(everything(), names_to = "Variable", values_to = "Respuesta") |> 
+  count(Variable, Respuesta) |> 
+  pivot_wider(names_from = Respuesta, values_from = n, values_fill = 0) |> 
+  # Sumamos las columnas numéricas para sacar el TOTAL
+  mutate(TOTAL = rowSums(across(where(is.numeric)))) |> 
+  print()
+
+# Creamos el filtro.
+estandarizar_binaria <- function(columna) {
+  texto_limpio <- toupper(trimws(as.character(columna)))
+  resultado <- ifelse(texto_limpio %in% c("SI", "SÍ", "S", "YES", "Y", "TRUE", "T", "1", "2", "3", "4"), 1, 0)
+  return(as.factor(resultado))
+}
+
+# Aplicamos la limpieza a las 4 columnas
+datos_seguros <- datos_seguros |> 
+  mutate(across(c(Soltero, ColorRojo, Suspensiones, ConducenHijos), estandarizar_binaria))
+
+# --- EL DESPUÉS (TABLA LIMPIA) ---
+print("-----------------------------------")
+print("ESTADO TRANSFORMADO:1 = Sí, 0 = No)")
+datos_seguros |> 
+  select(Soltero, ColorRojo, Suspensiones, ConducenHijos) |> 
+  mutate(across(everything(), as.character)) |> 
+  pivot_longer(everything(), names_to = "Variable", values_to = "Categoria") |> 
+  count(Variable, Categoria) |> 
+  pivot_wider(names_from = Categoria, values_from = n, values_fill = 0) |> 
+  # Aquí ya sabemos que solo quedan ceros y unos
+  mutate(TOTAL = `0` + `1`) |> 
+  print()
+```
+
+
+## Fase 2: Manipulación, Agregación y Métricas de Siniestralidad
+
+### 1. Severidad y frecuencia de siniestros por vehículo
+Calcule las siguientes métricas
+agregadas por Tipo de vehículo y Uso (Comercial vs. Privado):
+• Porcentaje de asegurados con al menos un siniestro (NSiniestros > 0).
+• Frecuencia promedio de siniestros (NSiniestros).
+• Cuantía total reclamada (ΣTCuantia) y cuantía promedio por siniestro.
+
+```{r metricas-siniestralidad, message=FALSE, warning=FALSE}
+# --- TABLA GERENCIAL DE RIESGO ---
+print("----------------------------------------------------------------")
+print("Métricas agregadas por Tipo de vehículo y Uso")
+print("----------------------------------------------------------------")
+
+datos_seguros |> 
+  # 1. Agrupamos por los segmentos solicitados
+  group_by(Tipo, Uso) |> 
+  
+  # 2. Calculamos las métricas 
+  summarise(
+    Total_Asegurados = n(),
+    Pct_Con_Siniestro = (sum(NSiniestros > 0, na.rm = TRUE) / n()) * 100,
+    Frecuencia_Promedio = mean(NSiniestros, na.rm = TRUE),
+    Cuantia_Total = sum(TCuantia, na.rm = TRUE),
+    Cuantia_Promedio_Siniestro = ifelse(
+      sum(NSiniestros, na.rm = TRUE) == 0, 
+      0, 
+      sum(TCuantia, na.rm = TRUE) / sum(NSiniestros, na.rm = TRUE)
+    ),
+    .groups = "drop" # Silenciamos el aviso de reagrupación de la consola
+  ) |> 
+  
+  # 3. Imprimimos el resultado como tabla (width = Inf evita cortes visuales)
+  print(width = Inf)
+  ```
+
+### 2. Análisis de riesgo demográfico y experiencia
+Cree rangos de experiencia al volante
+(Experiencia) y edad (Edad):
+Rango Edad =
+    Joven si Edad < 30
+    Adulto si 30 ≤ Edad ≤ 55
+    Senior si Edad > 55
+Determine qué segmento presenta el mayor valor acumulado de pérdidas y evalúe si existe
+interacción entre el nivel educativo (Educacion) y la severidad de los reclamos.
+
+```{r riesgo-demografico, message=FALSE, warning=FALSE}
+# --- CREACIÓN DE RANGOS ---
+print("----------------------------------------------------------------")
+print("1. Discretización de variables: Rango de Edad y Experiencia")
+
+datos_seguros <- datos_seguros |> 
+  mutate(
+    # Aplicamos condicional exacta para Edad
+    Rango_Edad = case_when(
+      Edad < 30 ~ "Joven",
+      Edad >= 30 & Edad <= 55 ~ "Adulto",
+      Edad > 55 ~ "Senior"
+    ),
+    
+    # Aplicamos rangos lógicos para Experiencia
+    Rango_Experiencia = case_when(
+      Experiencia < 5 ~ "Novato (< 5 años)",
+      Experiencia >= 5 & Experiencia <= 15 ~ "Intermedio (5-15 años)",
+      Experiencia > 15 ~ "Experto (> 15 años)"
+    )
+  )
+
+# Validamos que las nuevas columnas se hayan creado
+datos_seguros |> 
+  select(Rango_Edad, Rango_Experiencia) |> 
+  summary() |> 
+  print()
+
+# --- ANÁLISIS DE PÉRDIDAS POR SEGMENTO ---
+print("----------------------------------------------------------------")
+print("2. Segmento con mayor valor acumulado de pérdidas")
+
+datos_seguros |> 
+  group_by(Rango_Edad, Rango_Experiencia) |> 
+  summarise(
+    Total_Asegurados = n(),
+    Perdida_Acumulada = sum(TCuantia, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  # Ordenamos de mayor a menor pérdida
+  arrange(desc(Perdida_Acumulada)) |> 
+  print()
+
+# --- INTERACCIÓN: EDUCACIÓN VS SEVERIDAD ---
+print("----------------------------------------------------------------")
+print("3. Evaluación de interacción entre Nivel Educativo y Severidad")
+
+datos_seguros |> 
+  group_by(Educacion) |> 
+  summarise(
+    Total_Siniestros = sum(NSiniestros, na.rm = TRUE),
+    Cuantia_Total = sum(TCuantia, na.rm = TRUE),
+    # Calculamos la severidad real: Costo por cada choque
+    Severidad_Promedio = ifelse(Total_Siniestros == 0, 0, Cuantia_Total / Total_Siniestros),
+    .groups = "drop"
+  ) |> 
+  arrange(desc(Severidad_Promedio)) |> 
+  print()
+```
+**Interpretación de Resultados Actuariales:**
+
+1. **Concentración del Riesgo (Pérdida Acumulada):* El segmento que presenta el mayor impacto financiero para la aseguradora es el de Adultos (30 a 55 años) con experiencia de Novatos (< 5 años). Este grupo acumula más de $234.4 millones en pérdidas. Aunque la intuición suele culpar a los conductores más jóvenes, los datos demuestran que el volumen masivo de asegurados en este segmento adulto (28,672 clientes) combinado con su inexperiencia al volante genera la mayor fuga de capital.
+
+2. **Interacción entre Educación y Severidad:* Se evidencia una interacción clara, pero contra-intuitiva. Los asegurados con grado de Master presentan la severidad más alta ($5,218 de costo promedio por choque), seguidos por los de nivel Bachiller ($5,179). Por otro lado, los clientes con educación Superior universitaria registran los siniestros más económicos ($4,879). Desde una perspectiva de negocio, esto sugiere que el nivel educativo no necesariamente reduce la gravedad del choque, pero sí podría estar correlacionado con el poder adquisitivo: profesionales con maestrías tienden a asegurar vehículos de gamas más altas, cuyos repuestos y reparaciones son mucho más costosos cuando ocurre un siniestro.
+
+### 3. Razón vehículo–ingreso e infracciones
+Calcule la razón Razón = ValVehiculo/Ingresos
+Analice la correlación entre esta razón, la presencia de suspensiones de licencia (Suspensiones) y la frecuencia de accidentes en zonas urbanas vs. rurales.
+```{r razon-ingreso, message=FALSE, warning=FALSE}
+# --- CREACIÓN DE LA RAZÓN FINANCIERA ---
+print("----------------------------------------------------------------")
+print("1. Cálculo de Razón ValVehículo/Ingreso (Blindado contra división por cero)")
+
+datos_seguros <- datos_seguros |> 
+  mutate(
+    # Si el ingreso es mayor a 0, dividimos; si no, asignamos 0 para evitar errores Inf/NaN
+    Razon_Vehiculo_Ingreso = ifelse(Ingresos > 0, ValVehiculo / Ingresos, 0)
+  )
+
+# --- ANÁLISIS DE INTERACCIÓN Y RIESGO ---
+print("----------------------------------------------------------------")
+print("2. Interacción entre Razón Financiera, Suspensiones y Zona de conducción")
+
+datos_seguros |> 
+  group_by(Zona, Suspensiones) |> 
+  summarise(
+    Total_Asegurados = n(),
+    Razon_Promedio = mean(Razon_Vehiculo_Ingreso, na.rm = TRUE),
+    Frecuencia_Promedio = mean(NSiniestros, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  # Ordenamos por zona y luego por la frecuencia de choques más alta
+  arrange(Zona, desc(Frecuencia_Promedio)) |> 
+  print()
+```
+
+**Análisis de Interacción (Razón Vehículo-Ingreso, Zonas y Suspensiones):**
+1. *Suspensiones vs. Frecuencia:* Conductores con suspensiones previas (1) siempre presentan mayor frecuencia de accidentes que los conductores limpios (0), independientemente de la zona. En áreas rurales, el riesgo asociado a un mal historial se nota drásticamente, elevando la frecuencia promedio de choques de 0.89 a 1.28. Esto confirma que las infracciones previas son un excelente predictor de siniestralidad futura.   
+2. *Urbano vs. Rural:* La variable geográfica domina el riesgo. El entorno urbano es tan propenso a siniestros que un conductor "limpio" en la ciudad choca con mucha más frecuencia (1.71) que un infractor comprobado en el campo (1.28). La densidad del tráfico citadino aplasta el factor del buen comportamiento individual.   
+3. *Razón Vehículo/Ingreso:* Existe una correlación inversa muy clara entre la prudencia al volante y el endeudamiento automotriz. Los conductores con suspensiones (1) manejan autos comparativamente más baratos en relación con su sueldo (Razón Promedio de 0.47 en zonas rurales y 0.50 en urbanas). Por el contrario, los clientes sin suspensiones (0) tienden a adquirir vehículos cuyo valor casi iguala o supera su ingreso anual entero (Razón de 0.91 en la ciudad y hasta 1.28 en el campo). 
+
+**hallazgo clave:** los clientes con mal historial asumen menos riesgo financiero personal al comprar autos más modestos, pero le trasladan una alta carga de riesgo operativo (accidentes continuos) a la aseguradora. El conductor infractor arriesga poco de su propio patrimonio porque maneja un auto relativamente barato para su nivel de ingresos, pero al chocar constantemente, obliga a la aseguradora a pagar con frecuencia por las reparaciones, daños a terceros o gastos médicos. Básicamente, el cliente invierte poco en su auto, maneja mal, y la aseguradora termina asumiendo el costo real de esa irresponsabilidad.
+
+## Fase 3: Visualización de Datos e Insights Visuales
+### 1. Distribución de la cuantía de reclamaciones:
+Construya un gráfico de densidad o histograma de la cuantía reclamada (TCuantia) para la población siniestrada. Aplique una transformación logarítmica (log(1 + TCuantia)) para mitigar el sesgo a la derecha y justifique la necesidad de esta transformación visual.
+
+```{r visualizacion-cuantia, fig.width=12, fig.height=8}
+
+# Filtramos solo los asegurados con al menos un siniestro
+siniestrados <- datos_seguros |> filter(TCuantia > 0)
+
+print(paste("Total de asegurados siniestrados:", nrow(siniestrados)))
+print(paste("Media de cuantía:", round(mean(siniestrados$TCuantia), 2)))
+print(paste("Mediana de cuantía:", round(median(siniestrados$TCuantia), 2)))
+print(paste("Índice de asimetría (Media/Mediana):", 
+           round(mean(siniestrados$TCuantia) / median(siniestrados$TCuantia), 2)))
+
+# --- GRÁFICO 1: HISTOGRAMA SIN TRANSFORMACIÓN ---
+p1 <- ggplot(siniestrados, aes(x = TCuantia)) +
+  geom_histogram(bins = 60, fill = "#3498db", color = "black", alpha = 0.7) +
+  geom_vline(aes(xintercept = mean(TCuantia)), color = "red", linetype = "dashed", linewidth = 1) +
+  geom_vline(aes(xintercept = median(TCuantia)), color = "green", linetype = "dashed", linewidth = 1) +
+  labs(
+    title = "Histograma: Cuantía de Reclamaciones (Escala Original)",
+    subtitle = "Distribución fuertemente sesgada a la derecha",
+    x = "Cuantía Reclamada (USD)",
+    y = "Frecuencia"
+  ) +
+  scale_x_continuous(labels = scales::label_number(prefix = "$", scale = 1e-3, suffix = "k")) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 12))
+
+# --- GRÁFICO 2: DENSIDAD SIN TRANSFORMACIÓN ---
+p2 <- ggplot(siniestrados, aes(x = TCuantia)) +
+  geom_density(fill = "#3498db", alpha = 0.5, color = "#2980b9", linewidth = 1) +
+  labs(
+    title = "Densidad: Cuantía (Escala Original)",
+    x = "Cuantía Reclamada (USD)",
+    y = "Densidad"
+  ) +
+  scale_x_continuous(labels = scales::label_number(prefix = "$", scale = 1e-3, suffix = "k")) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 12))
+
+# --- TRANSFORMACIÓN LOGARÍTMICA ---
+siniestrados_log <- siniestrados |> 
+  mutate(TCuantia_log = log1p(TCuantia))
+
+print(paste("Media log:", round(mean(siniestrados_log$TCuantia_log), 3)))
+print(paste("Mediana log:", round(median(siniestrados_log$TCuantia_log), 3)))
+
+# --- GRÁFICO 3: HISTOGRAMA CON TRANSFORMACIÓN LOG---
+p3 <- ggplot(siniestrados_log, aes(x = TCuantia_log)) +
+  geom_histogram(bins = 60, fill = "#e74c3c", color = "black", alpha = 0.7) +
+  labs(
+    title = "Histograma: Cuantía Transformada log(1 + Cuantía)",
+    subtitle = "Distribución normalizada y simétrica",
+    x = "log(1 + Cuantía)",
+    y = "Frecuencia"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 12))
+
+# --- GRÁFICO 4: DENSIDAD CON TRANSFORMACIÓN LOG---
+p4 <- ggplot(siniestrados_log, aes(x = TCuantia_log)) +
+  geom_density(fill = "#e74c3c", alpha = 0.5, color = "#c0392b", linewidth = 1) +
+  labs(
+    title = "Densidad: Cuantía Transformada a LOG",
+    x = "log(1 + Cuantía)",
+    y = "Densidad"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 12))
+
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+```
+
+**Interpretación de los Gráficos: Distribución y Transformación Logarítmica**
+1. Escala Original (Fila Superior) - Sesgo severo a la derecha: Los gráficos superiores (histograma y densidad) muestran una concentración masiva de los datos en los montos más bajos (cerca de $0 a $5,000) con una "cola larga" que se extiende hasta los $60,000.
+
+    Distorsión visual: En esta escala tradicional, la inmensa mayoría de los siniestros cotidianos aplastan la visualización, haciendo imposible apreciar la variabilidad o el comportamiento de los siniestros de mayor cuantía, los cuales quedan reducidos a una línea casi invisible sobre el eje horizontal.
+
+2. Transformación Logarítmica (Fila Inferior) - Normalización y simetría: Al aplicar la función log(1 + TCuantia) en la fila inferior, los datos se comprimen en los valores altos y se expanden en los valores bajos, transformando la distribución en una estructura mucho más simétrica y manejable para el análisis estadístico.
+
+    Revelación de la bimodalidad: con esta transformación, los gráficos revelan que la distribución no es una campana tradicional, sino bimodal (presenta dos "jorobas" o picos principales bien diferenciados en el histograma y la densidad transformados). Esto demuestra de forma empírica que en la cartera de seguros conviven dos naturalezas de siniestros claramente separadas: un grupo principal de reclamaciones moderadas y un segundo grupo de reclamaciones de alta gravedad.
+
+3. Justificación de la Transformación Visual
+    Mitigación de valores extremos: La transformación logarítmica es indispensable en la ciencia actuarial porque evita que los siniestros catastróficos dominen visual y matemáticamente el análisis de riesgo.
+
+    Legibilidad analítica: Permite estabilizar la varianza y visualizar con total claridad la densidad real de los datos, facilitando la construcción posterior de modelos predictivos de precios y reservas para la compañía de seguros.
