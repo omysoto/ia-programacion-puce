@@ -1,8 +1,8 @@
-# IA y Programación - PUCE
+# IA y Programación - PUCE / EPN
 
 ## Información del Proyecto
 - **Materia:** IA y Programación
-- **Institución:** Pontificia Universidad Católica del Ecuador (PUCE-EPN)
+- **Institución:** Pontificia Universidad Católica del Ecuador y Escuela Politecnica Nacional (PUCE-EPN)
 - **Integrantes:** 
   - Martín Valenzuela
   - Naomi Soto
