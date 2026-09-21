@@ -263,3 +263,131 @@ print("--- Porcentaje del ingreso total correspondiente a la región Norte ---")
 print(porcentaje_norte)
 
 ```
+```{r}
+# ==============================================================================
+# EJERCICIO 2: Visualización de datos a partir de 'ventas'
+# ==============================================================================
+
+# librerías requeridas
+library(readr)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+
+# Cargar datos en memoria
+ventas <- read_csv("ventas_base.csv")
+
+# ------------------------------------------------------------------------------
+# a. Gráfico de línea: Tendencia de UNIDADES vendidas por mes (no de ingreso)
+# ------------------------------------------------------------------------------
+
+# Agrupar unidades vendidas por mes
+ventas_mensuales <- ventas %>%
+  mutate(mes = floor_date(as.Date(fecha), unit = "month")) %>%
+  group_by(mes) %>%
+  summarise(total_unidades = sum(unidades, na.rm = TRUE))
+
+# Crear gráfico de línea
+grafico_a <- ggplot(ventas_mensuales, aes(x = mes, y = total_unidades)) +
+  geom_line(color = "#2b5c8f", linewidth = 1.2) +
+  geom_point(color = "#1e3d59", size = 2.5) +
+  theme_minimal() +
+  labs(
+    title = "Tendencia Mensual de Unidades Vendidas",
+    x = "Fecha (Mes)",
+    y = "Total de Unidades Vendidas"
+  )
+
+print(grafico_a)
+
+
+# ------------------------------------------------------------------------------
+# b. Boxplot: Comparativa de Ingreso por Región
+# ------------------------------------------------------------------------------
+
+grafico_b <- ggplot(ventas, aes(x = region, y = ingreso, fill = region)) +
+  geom_boxplot(alpha = 0.8, outlier.color = "red", outlier.shape = 16) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+  theme(legend.position = "none") + # Opcional: oculta la leyenda redundantemente
+  labs(
+    title = "Distribución del Ingreso por Región",
+    x = "Región",
+    y = "Ingreso"
+  )
+
+print(grafico_b)
+
+
+# ------------------------------------------------------------------------------
+# c. Gráfico de dispersión: Unidades vs. Ingreso, coloreado por Región
+# ------------------------------------------------------------------------------
+
+grafico_c <- ggplot(ventas, aes(x = unidades, y = ingreso, color = region)) +
+  geom_point(alpha = 0.7, size = 3) +
+  scale_color_brewer(palette = "Set1") +
+  theme_minimal() +
+  labs(
+    title = "Relación entre Unidades Vendidas e Ingreso",
+    x = "Unidades Vendidas",
+    y = "Ingreso",
+    color = "Región"
+  )
+
+print(grafico_c)
+```
+```{r}
+# ==============================================================================
+# EJERCICIO 3: Gráfico de barras interactivo con Plotly
+# ==============================================================================
+
+# Cargar librerías necesarias
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+
+# Cargar datos si no están en memoria
+ventas <- read_csv("ventas_base.csv")
+
+# ------------------------------------------------------------------------------
+# 1. Agregaciones previas: Suma de ingreso y conteo de transacciones por región
+# ------------------------------------------------------------------------------
+resumen_region <- ventas %>%
+  group_by(region) %>%
+  summarise(
+    ingreso_total = sum(ingreso, na.rm = TRUE),
+    n_transacciones = n()
+  )
+
+# ------------------------------------------------------------------------------
+# 2. Construcción del gráfico con ggplot2 incluyendo el texto del tooltip
+# ------------------------------------------------------------------------------
+p <- ggplot(resumen_region, aes(
+  x = region, 
+  y = ingreso_total, 
+  fill = region,
+  text = paste0(
+    "Región: ", region, "\n",
+    "Ingreso Total: $", format(ingreso_total, big.mark = ","), "\n",
+    "Transacciones: ", n_transacciones
+  )
+)) +
+  geom_col(alpha = 0.85) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+  labs(
+    title = "Ingreso Total y Transacciones por Región",
+    x = "Región",
+    y = "Ingreso Total"
+  ) +
+  theme(legend.position = "none")
+
+# ------------------------------------------------------------------------------
+# 3. Convertir a gráfico interactivo con ggplotly
+# ------------------------------------------------------------------------------
+grafico_interactivo <- ggplotly(p, tooltip = "text")
+
+# Mostrar el gráfico interactivo
+grafico_interactivo
+```
