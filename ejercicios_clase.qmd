@@ -198,3 +198,68 @@ print("Lectura desde Excel:")
 print(data)
 
 ```
+```{r}
+# ==============================================================================
+# EJERCICIO 1: Análisis y Transformación del dataframe 'ventas'
+# ==============================================================================
+
+# Cargar librerías necesarias
+library(readr)
+library(dplyr)
+library(lubridate)
+
+# 0. Carga de datos
+ventas <- read_csv("ventas_base.csv")
+
+# ------------------------------------------------------------------------------
+# a. Crear la columna 'producto_region' en formato "Producto (Región)"
+#    y calcular el ingreso total por cada combinación.
+# ------------------------------------------------------------------------------
+
+# Crear la nueva columna combinando producto y región
+ventas <- ventas %>%
+  mutate(producto_region = paste0(producto, " (", region, ")"))
+
+# Agrupar por la combinación creada y calcular la suma de ingresos
+ingreso_por_producto_region <- ventas %>%
+  group_by(producto_region) %>%
+  summarise(ingreso_total = sum(ingreso, na.rm = TRUE))
+
+# Mostrar resultado del literal a
+print("--- Ingreso total por combinación Producto (Región) ---")
+print(ingreso_por_producto_region)
+
+
+# ------------------------------------------------------------------------------
+# b. Crear la columna 'trimestre' a partir de la fecha.
+# ------------------------------------------------------------------------------
+
+# Convertir la columna fecha a formato Date y extraer el trimestre (1 a 4)
+ventas <- ventas %>%
+  mutate(
+    fecha = as.Date(fecha),
+    trimestre = quarter(fecha)
+  )
+
+# Vista previa para verificar la inclusión del trimestre
+print("--- Vista previa del dataframe con la columna 'trimestre' ---")
+head(ventas)
+
+
+# ------------------------------------------------------------------------------
+# c. Calcular qué porcentaje del ingreso total corresponde a la región "Norte".
+# ------------------------------------------------------------------------------
+
+# Cálculo del ingreso total general y el correspondiente únicamente a "Norte"
+porcentaje_norte <- ventas %>%
+  summarise(
+    ingreso_norte = sum(ingreso[region == "Norte"], na.rm = TRUE),
+    ingreso_total = sum(ingreso, na.rm = TRUE),
+    pct_norte = (ingreso_norte / ingreso_total) * 100
+  )
+
+# Mostrar resultado del literal c
+print("--- Porcentaje del ingreso total correspondiente a la región Norte ---")
+print(porcentaje_norte)
+
+```
