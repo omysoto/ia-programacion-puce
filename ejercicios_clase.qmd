@@ -485,3 +485,27 @@ cat("Probabilidad teórica de 0 solicitudes:", prob_0_teorica, "\n")
 cat("Probabilidad teórica de más de 10 solicitudes:", prob_mas_10_teorica, "\n")
 ```
 
+
+```{r}
+# Fijar semilla para reproducibilidad (opcional)
+set.seed(123)
+
+# Parámetros del problema
+media <- 4
+rate <- 1 / media  # Tasa lambda = 1/4 = 0.25
+n_atenciones <- 1000
+
+# Simulación de 1000 atenciones
+tiempos <- rexp(n_atenciones, rate = rate)
+
+# Estimar la probabilidad empírica de que la atención tome más de 10 minutos
+prob_empirica <- mean(tiempos > 10)
+
+# Calcular el valor teórico mediante la función de distribución acumulada (pexp)
+# P(X > 10) = 1 - P(X <= 10) o usando lower.tail = FALSE
+prob_teorica <- pexp(10, rate = rate, lower.tail = FALSE)
+
+# Mostrar resultados
+cat("Probabilidad empírica (simulación):", prob_empirica, "\n")
+cat("Probabilidad teórica (pexp):", prob_teorica, "\n")
+```
