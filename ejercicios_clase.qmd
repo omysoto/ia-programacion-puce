@@ -449,3 +449,10 @@ resultados <- data.frame(
 print(resultados)
 ```
 
+
+```{r}
+# Histograma de 10000 números aleatorios uniformes en (0,1)
+# Histograma de 10000 números aleatorios uniformes en (0,1)
+hist(runif(10000), main = "Distribución números aleatorios", col = "#39c5bb", xlab ="")
+```
+
