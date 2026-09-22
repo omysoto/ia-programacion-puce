@@ -455,4 +455,33 @@ print(resultados)
 # Histograma de 10000 números aleatorios uniformes en (0,1)
 hist(runif(10000), main = "Distribución números aleatorios", col = "#39c5bb", xlab ="")
 ```
+```{r}
+# Fijar semilla para reproducibilidad (opcional)
+set.seed(123)
+
+# Parámetros del problema
+lambda <- 6
+n_horas <- 2000
+
+# Simulación de 2000 horas
+simulacion <- rpois(n_horas, lambda = lambda)
+
+# Estimar la probabilidad de recibir 0 solicitudes en una hora
+prob_0 <- mean(simulacion == 0)
+
+# Estimar la probabilidad de recibir más de 10 solicitudes en una hora
+prob_mas_10 <- mean(simulacion > 10)
+
+# Mostrar resultados simulados
+cat("Probabilidad estimada de 0 solicitudes:", prob_0, "\n")
+cat("Probabilidad estimada de más de 10 solicitudes:", prob_mas_10, "\n")
+
+# (Opcional) Comparación con el valor teórico exacto:
+prob_0_teorica <- dpois(0, lambda = lambda)
+prob_mas_10_teorica <- ppois(10, lambda = lambda, lower.tail = FALSE)
+
+cat("\n--- Valores Teóricos Exactos ---\n")
+cat("Probabilidad teórica de 0 solicitudes:", prob_0_teorica, "\n")
+cat("Probabilidad teórica de más de 10 solicitudes:", prob_mas_10_teorica, "\n")
+```
 
