@@ -391,3 +391,61 @@ grafico_interactivo <- ggplotly(p, tooltip = "text")
 # Mostrar el gráfico interactivo
 grafico_interactivo
 ```
+
+```{r}
+# Parámetros del Componente 1 (LCG1)
+a1 <- 40014
+m1 <- 2147483563
+
+# Parámetros del Componente 2 (LCG2)
+a2 <- 40692
+m2 <- 2147483399
+
+# Valores iniciales (semillas)
+X1 <- 12345
+X2 <- 67890
+
+# Cantidad de valores a generar
+n <- 5
+
+# Vectores para almacenar los resultados
+U <- numeric(n)
+X1_vec <- numeric(n)
+X2_vec <- numeric(n)
+Z_vec <- numeric(n)
+
+# Generación de la secuencia
+for (i in 1:n) {
+  # Actualizar estados LCG1 y LCG2
+  X1 <- (a1 * X1) %% m1
+  X2 <- (a2 * X2) %% m2
+  
+  # Calcular Zn = (X1,n - X2,n) mod (m1 - 1)
+  Z <- (X1 - X2) %% (m1 - 1)
+  
+  # Regla para definir Un
+  if (Z > 0) {
+    U_val <- Z / m1
+  } else {
+    U_val <- (m1 - 1) / m1
+  }
+  
+  # Guardar los valores
+  X1_vec[i] <- X1
+  X2_vec[i] <- X2
+  Z_vec[i] <- Z
+  U[i] <- U_val
+}
+
+# Crear una tabla con los resultados detallados paso a paso
+resultados <- data.frame(
+  n = 1:n,
+  X1_n = X1_vec,
+  X2_n = X2_vec,
+  Z_n = Z_vec,
+  U_n = U
+)
+
+print(resultados)
+```
+
