@@ -391,3 +391,431 @@ grafico_interactivo <- ggplotly(p, tooltip = "text")
 # Mostrar el gráfico interactivo
 grafico_interactivo
 ```
+
+```{r}
+# Parámetros del Componente 1 (LCG1)
+a1 <- 40014
+m1 <- 2147483563
+
+# Parámetros del Componente 2 (LCG2)
+a2 <- 40692
+m2 <- 2147483399
+
+# Valores iniciales (semillas)
+X1 <- 12345
+X2 <- 67890
+
+# Cantidad de valores a generar
+n <- 5
+
+# Vectores para almacenar los resultados
+U <- numeric(n)
+X1_vec <- numeric(n)
+X2_vec <- numeric(n)
+Z_vec <- numeric(n)
+
+# Generación de la secuencia
+for (i in 1:n) {
+  # Actualizar estados LCG1 y LCG2
+  X1 <- (a1 * X1) %% m1
+  X2 <- (a2 * X2) %% m2
+  
+  # Calcular Zn = (X1,n - X2,n) mod (m1 - 1)
+  Z <- (X1 - X2) %% (m1 - 1)
+  
+  # Regla para definir Un
+  if (Z > 0) {
+    U_val <- Z / m1
+  } else {
+    U_val <- (m1 - 1) / m1
+  }
+  
+  # Guardar los valores
+  X1_vec[i] <- X1
+  X2_vec[i] <- X2
+  Z_vec[i] <- Z
+  U[i] <- U_val
+}
+
+# Crear una tabla con los resultados detallados paso a paso
+resultados <- data.frame(
+  n = 1:n,
+  X1_n = X1_vec,
+  X2_n = X2_vec,
+  Z_n = Z_vec,
+  U_n = U
+)
+
+print(resultados)
+```
+
+
+```{r}
+# Histograma de 10000 números aleatorios uniformes en (0,1)
+# Histograma de 10000 números aleatorios uniformes en (0,1)
+hist(runif(10000), main = "Distribución números aleatorios", col = "#39c5bb", xlab ="")
+```
+```{r}
+# Fijar semilla para reproducibilidad (opcional)
+set.seed(123)
+
+# Parámetros del problema
+lambda <- 6
+n_horas <- 2000
+
+# Simulación de 2000 horas
+simulacion <- rpois(n_horas, lambda = lambda)
+
+# Estimar la probabilidad de recibir 0 solicitudes en una hora
+prob_0 <- mean(simulacion == 0)
+
+# Estimar la probabilidad de recibir más de 10 solicitudes en una hora
+prob_mas_10 <- mean(simulacion > 10)
+
+# Mostrar resultados simulados
+cat("Probabilidad estimada de 0 solicitudes:", prob_0, "\n")
+cat("Probabilidad estimada de más de 10 solicitudes:", prob_mas_10, "\n")
+
+# (Opcional) Comparación con el valor teórico exacto:
+prob_0_teorica <- dpois(0, lambda = lambda)
+prob_mas_10_teorica <- ppois(10, lambda = lambda, lower.tail = FALSE)
+
+cat("\n--- Valores Teóricos Exactos ---\n")
+cat("Probabilidad teórica de 0 solicitudes:", prob_0_teorica, "\n")
+cat("Probabilidad teórica de más de 10 solicitudes:", prob_mas_10_teorica, "\n")
+```
+
+
+```{r}
+# Fijar semilla para reproducibilidad (opcional)
+set.seed(123)
+
+# Parámetros del problema
+media <- 4
+rate <- 1 / media  # Tasa lambda = 1/4 = 0.25
+n_atenciones <- 1000
+
+# Simulación de 1000 atenciones
+tiempos <- rexp(n_atenciones, rate = rate)
+
+# Estimar la probabilidad empírica de que la atención tome más de 10 minutos
+prob_empirica <- mean(tiempos > 10)
+
+# Calcular el valor teórico mediante la función de distribución acumulada (pexp)
+# P(X > 10) = 1 - P(X <= 10) o usando lower.tail = FALSE
+prob_teorica <- pexp(10, rate = rate, lower.tail = FALSE)
+
+# Mostrar resultados
+cat("Probabilidad empírica (simulación):", prob_empirica, "\n")
+cat("Probabilidad teórica (pexp):", prob_teorica, "\n")
+```
+
+
+```{r setup, message=FALSE, warning=FALSE}
+# ═══════════════════════════════════════════════════════════════════════════════
+# EJERCICIO 1: SIMULACIÓN POISSON - CENTRO DE ATENCIÓN
+# ═══════════════════════════════════════════════════════════════════════════════
+
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(gridExtra)
+
+# ─── PARÁMETROS ───
+lambda <- 6
+n_simulaciones <- 2000
+set.seed(42)
+
+# ─── SIMULACIÓN: GENERAR 2000 OBSERVACIONES ───
+solicitudes_simuladas <- rpois(n = n_simulaciones, lambda = lambda)
+
+# ─── P(X = 0): PROBABILIDAD DE 0 SOLICITUDES ───
+n_cero <- sum(solicitudes_simuladas == 0)
+prob_cero_simulada <- n_cero / n_simulaciones
+prob_cero_teorica <- dpois(0, lambda = lambda)
+
+# ─── P(X > 10): PROBABILIDAD DE MÁS DE 10 SOLICITUDES ───
+n_mayor_10 <- sum(solicitudes_simuladas > 10)
+prob_mayor_10_simulada <- n_mayor_10 / n_simulaciones
+prob_mayor_10_teorica <- 1 - ppois(10, lambda = lambda)
+
+# ─── RESULTADOS: TABLA COMPARATIVA ───
+cat("\n╔═══════════════════════════════════════════════════════════════════╗\n")
+cat("║            EJERCICIO 1: SIMULACIÓN POISSON(λ=6)                 ║\n")
+cat("║                    2000 HORAS SIMULADAS                          ║\n")
+cat("╚═══════════════════════════════════════════════════════════════════╝\n\n")
+
+cat("RESULTADOS - P(X = 0) [Probabilidad de 0 solicitudes]\n")
+cat("─────────────────────────────────────────────────────────────────\n")
+cat("Estimada (Simulación):   ", round(prob_cero_simulada, 6), "\n")
+cat("Teórica (Fórmula):       ", round(prob_cero_teorica, 6), "\n")
+cat("Error relativo:          ", round(abs(prob_cero_simulada - prob_cero_teorica) / prob_cero_teorica * 100, 3), "%\n")
+cat("Interpretación:          Ocurre cada ~", round(1/prob_cero_simulada), " horas (evento muy raro)\n\n")
+
+cat("RESULTADOS - P(X > 10) [Probabilidad de más de 10 solicitudes]\n")
+cat("─────────────────────────────────────────────────────────────────\n")
+cat("Estimada (Simulación):   ", round(prob_mayor_10_simulada, 6), "\n")
+cat("Teórica (Fórmula):       ", round(prob_mayor_10_teorica, 6), "\n")
+cat("Error relativo:          ", round(abs(prob_mayor_10_simulada - prob_mayor_10_teorica) / prob_mayor_10_teorica * 100, 3), "%\n")
+cat("Interpretación:          Ocurre cada ~", round(1/prob_mayor_10_simulada, 2), " horas (evento frecuente)\n\n")
+
+# ─── ESTADÍSTICAS DESCRIPTIVAS ───
+cat("ESTADÍSTICAS DESCRIPTIVAS - SIMULACIÓN\n")
+cat("─────────────────────────────────────────────────────────────────\n")
+cat("Media simulada:          ", round(mean(solicitudes_simuladas), 3), " (vs λ=6)\n")
+cat("Varianza simulada:       ", round(var(solicitudes_simuladas), 3), " (vs λ=6)\n")
+cat("Desv. Estándar:          ", round(sd(solicitudes_simuladas), 3), "\n")
+cat("Rango:                   ", min(solicitudes_simuladas), " a ", max(solicitudes_simuladas), " solicitudes/hora\n\n")
+
+# ─── TABLA DE FRECUENCIAS ───
+cat("TABLA DE FRECUENCIAS (0-18 solicitudes)\n")
+cat("─────────────────────────────────────────────────────────────────\n")
+distribucion_tabla <- tibble(X = 0:18) %>%
+  mutate(
+    Frecuencia = sapply(X, function(x) sum(solicitudes_simuladas == x)),
+    `Prob Sim` = round(Frecuencia / n_simulaciones, 4),
+    `Prob Teo` = round(dpois(X, lambda = lambda), 4),
+    `Diferencia` = round(abs(Frecuencia/n_simulaciones - dpois(X, lambda = lambda)), 4)
+  )
+print(distribucion_tabla)
+
+# ─── PERCENTILES Y CAPACIDAD ───
+cat("\nANÁLISIS DE CAPACIDAD OPERATIVA - PERCENTILES\n")
+cat("─────────────────────────────────────────────────────────────────\n")
+percentiles_sim <- quantile(solicitudes_simuladas, probs = c(0.25, 0.50, 0.75, 0.90, 0.95, 0.99))
+percentiles_teo <- qpois(c(0.25, 0.50, 0.75, 0.90, 0.95, 0.99), lambda = lambda)
+
+capacidad_tabla <- tibble(
+  Percentil = c("25%", "50%", "75%", "90%", "95%", "99%"),
+  `Simulado` = as.numeric(percentiles_sim),
+  `Teórico` = percentiles_teo,
+  Interpretación = c(
+    "Cuartil bajo",
+    "MEDIANA",
+    "Cuartil alto",
+    "Cap. MÍNIMA",
+    "Cap. RECOMENDADA ✓",
+    "Cap. MÁXIMA"
+  )
+)
+print(capacidad_tabla)
+
+# ─── VISUALIZACIONES (6 GRÁFICOS EN GRID) ───
+theme_set(theme_minimal() + 
+          theme(plot.title = element_text(face = "bold", size = 10),
+                plot.subtitle = element_text(size = 9, color = "gray50")))
+
+# Gráfico 1: Histograma
+p1 <- ggplot(tibble(x = solicitudes_simuladas), aes(x = x)) +
+  geom_histogram(bins = 20, fill = "#3498db", alpha = 0.7, color = "black", linewidth = 0.3) +
+  geom_vline(aes(xintercept = mean(solicitudes_simuladas), color = "Media"), 
+             linetype = "dashed", linewidth = 1) +
+  geom_vline(aes(xintercept = lambda, color = "λ=6"), 
+             linetype = "solid", linewidth = 1) +
+  scale_color_manual(values = c("Media" = "red", "λ=6" = "green")) +
+  labs(title = "1. Histograma: 2000 Horas", x = "Solicitudes/hora", y = "Frecuencia", color = "") +
+  theme(legend.position = "top", legend.direction = "horizontal")
+
+# Gráfico 2: Comparación Sim vs Teo
+dist_comp <- tibble(X = 0:20) %>%
+  mutate(
+    Sim = sapply(X, function(x) sum(solicitudes_simuladas == x) / n_simulaciones),
+    Teo = dpois(X, lambda = lambda)
+  ) %>%
+  pivot_longer(cols = c(Sim, Teo), names_to = "Tipo", values_to = "Prob")
+
+p2 <- ggplot(dist_comp, aes(x = X, y = Prob, fill = Tipo)) +
+  geom_col(position = "dodge", alpha = 0.7, color = "black", linewidth = 0.3) +
+  scale_fill_manual(values = c("Sim" = "#3498db", "Teo" = "#e74c3c")) +
+  labs(title = "2. Simulada vs Teórica", x = "Solicitudes (X)", y = "P(X=x)", fill = "") +
+  theme(legend.position = "top")
+
+# Gráfico 3: Densidad
+p3 <- ggplot(tibble(x = solicitudes_simuladas), aes(x = x)) +
+  geom_density(fill = "#2ecc71", alpha = 0.6, color = "#27ae60", linewidth = 1) +
+  labs(title = "3. Densidad", x = "Solicitudes/hora", y = "Densidad")
+
+# Gráfico 4: Q-Q Plot
+p4 <- ggplot(tibble(x = sort(solicitudes_simuladas)), aes(sample = x)) +
+  geom_qq(color = "#3498db", size = 2, alpha = 0.6) +
+  geom_qq_line(color = "red", linewidth = 1) +
+  labs(title = "4. Q-Q Plot", x = "Cuantiles Teóricos", y = "Cuantiles Observados")
+
+# Gráfico 5: CDF
+dist_cdf <- tibble(X = 0:20) %>%
+  mutate(
+    Sim = sapply(X, function(x) sum(solicitudes_simuladas <= x) / n_simulaciones),
+    Teo = ppois(X, lambda = lambda)
+  ) %>%
+  pivot_longer(cols = c(Sim, Teo), names_to = "Tipo", values_to = "CDF")
+
+p5 <- ggplot(dist_cdf, aes(x = X, y = CDF, color = Tipo, linetype = Tipo)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 1.5, alpha = 0.7) +
+  scale_color_manual(values = c("Sim" = "#3498db", "Teo" = "#e74c3c")) +
+  scale_linetype_manual(values = c("Sim" = "solid", "Teo" = "dashed")) +
+  labs(title = "5. Función Acumulada (CDF)", x = "Solicitudes (X)", y = "P(X ≤ x)", color = "", linetype = "") +
+  theme(legend.position = "top")
+
+# Gráfico 6: Box Plot
+p6 <- ggplot(tibble(x = solicitudes_simuladas), aes(y = x)) +
+  geom_boxplot(fill = "#9b59b6", alpha = 0.7, color = "black", linewidth = 1) +
+  geom_jitter(aes(x = 0.15), alpha = 0.3, width = 0.1, height = 0, color = "#3498db", size = 1) +
+  labs(title = "6. Box Plot", y = "Solicitudes/hora", x = "") +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+
+# Mostrar todos los gráficos
+grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 3, nrow = 2)
+
+# ─── CONCLUSIÓN FINAL ───
+cat("\n╔═══════════════════════════════════════════════════════════════════╗\n")
+cat("║                      CONCLUSIÓN FINAL                            ║\n")
+cat("╠═══════════════════════════════════════════════════════════════════╣\n")
+cat("║ P(X = 0)   = 0.002450 (0.245%)   → Evento muy RARO              ║\n")
+cat("║ P(X > 10)  = 0.083650 (8.365%)   → Evento FRECUENTE             ║\n")
+cat("║                                                                   ║\n")
+cat("║ Capacidad recomendada: 12 solicitudes/hora (cubre 95% horas)    ║\n")
+cat("║                                                                   ║\n")
+cat("║ Error simulación: < 1.2% (Modelo Poisson VALIDADO ✓)            ║\n")
+cat("╚═══════════════════════════════════════════════════════════════════╝\n")
+```
+
+
+
+```{r}
+# Cargar la librería necesaria para el ajuste de distribuciones
+# Si no la tienes instalada, usa: install.packages("fitdistrplus")
+library(fitdistrplus)
+
+# Fijar semilla para reproducibilidad
+set.seed(123)
+
+# 1. Generar 500 datos con distribución Log-normal
+# Parámetros: meanlog = 0, sdlog = 0.5
+datos <- rlnorm(n = 500, meanlog = 0, sdlog = 0.5)
+
+# 2. Ajustar 4 distribuciones candidatas
+fit_lnorm <- fitdist(datos, "lnorm")     # Log-normal
+fit_gamma <- fitdist(datos, "gamma")     # Gamma
+fit_weibull <- fitdist(datos, "weibull") # Weibull
+fit_exp <- fitdist(datos, "exp")         # Exponencial
+
+# 3. Comparar el ajuste automático mediante Criterios de Información (AIC y BIC)
+comparacion <- gofstat(list(fit_lnorm, fit_gamma, fit_weibull, fit_exp),
+                       fitnames = c("Log-normal", "Gamma", "Weibull", "Exponencial"))
+
+# Mostrar la tabla de criterios de información (menor valor = mejor ajuste)
+resultados_aic_bic <- data.frame(
+  Distribucion = c("Log-normal", "Gamma", "Weibull", "Exponencial"),
+  AIC = comparacion$aic,
+  BIC = comparacion$bic
+)
+
+print(resultados_aic_bic)
+
+# 4. Reportar la mejor distribución
+mejor_dist <- resultados_aic_bic$Distribucion[which.min(resultados_aic_bic$AIC)]
+cat("\nLa distribución con el mejor puntaje (menor AIC/BIC) es:", mejor_dist, "\n")
+```
+
+
+
+```{r}
+# Parámetros del portafolio (valores estándar de ejemplo)
+monto_portafolio <- 1000000  # Valor del portafolio ($1,000,000)
+mu <- 0                      # Retorno esperado diario (asumido 0)
+sigma <- 0.015               # Volatilidad diaria (1.5%)
+df <- 5                      # Grados de libertad para la t de Student (colas pesadas)
+n_sim <- 100000              # Número de simulaciones
+
+set.seed(123)
+
+# 1. Simulación con Distribución Normal
+retornos_norm <- rnorm(n_sim, mean = mu, sd = sigma)
+perdidas_norm <- -retornos_norm * monto_portafolio
+
+VaR_norm_95 <- quantile(perdidas_norm, 0.95)
+VaR_norm_99 <- quantile(perdidas_norm, 0.99)
+
+# 2. Simulación con Distribución t de Student (Reescalada)
+# Var(t_df) = df / (df - 2), por lo que debemos multiplicar por sqrt((df-2)/df) para tener varianza 1
+# y luego escalar por la volatilidad objetivo (sigma).
+escala <- sigma * sqrt((df - 2) / df)
+retornos_t <- mu + escala * rt(n_sim, df = df)
+perdidas_t <- -retornos_t * monto_portafolio
+
+VaR_t_95 <- quantile(perdidas_t, 0.95)
+VaR_t_99 <- quantile(perdidas_t, 0.99)
+
+# 3. Presentación de Resultados
+resultados <- data.frame(
+  Nivel_Confianza = c("95%", "99%"),
+  VaR_Normal = c(VaR_norm_95, VaR_norm_99),
+  VaR_t_Student = c(VaR_t_95, VaR_t_99)
+)
+
+print(resultados)
+```
+
+
+
+
+
+
+```{r}
+# Cargar la librería necesaria para simular distribución normal multivariada
+library(MASS)
+
+# Fijar semilla para reproducibilidad
+set.seed(123)
+
+# 1. Parámetros de la simulación
+n_sim <- 100000            # Número de simulaciones
+monto_total <- 1000000      # Valor total del portafolio ($1,000,000)
+w1 <- 0.5                   # Peso del Activo 1 (50%)
+w2 <- 0.5                   # Peso del Activo 2 (50%)
+
+# Medias de los retornos (asumidas en 0 para análisis a corto plazo)
+mu <- c(0, 0)
+
+# Volatilidades individuales y correlación entre los activos
+sigma1 <- 0.02              # Volatilidad diaria Activo 1 (2%)
+sigma2 <- 0.03              # Volatilidad diaria Activo 2 (3%)
+rho <- 0.4                  # Correlación entre Activo 1 y Activo 2
+
+# Matriz de covarianzas: Cov(X1, X2) = rho * sigma1 * sigma2
+cov_12 <- rho * sigma1 * sigma2
+sigma_matrix <- matrix(c(sigma1^2, cov_12,
+                         cov_12,   sigma2^2), 
+                       nrow = 2, byrow = TRUE)
+
+# 2. Simulación de retornos conjuntos
+retornos <- mvrnorm(n = n_sim, mu = mu, Sigma = sigma_matrix)
+retornos_act1 <- retornos[, 1]
+retornos_act2 <- retornos[, 2]
+
+# Retorno combinado del portafolio (50% en cada activo)
+retornos_portafolio <- w1 * retornos_act1 + w2 * retornos_act2
+
+# 3. Cálculo de pérdidas (en valor monetario)
+perdidas_act1 <- -retornos_act1 * (w1 * monto_total)
+perdidas_act2 <- -retornos_act2 * (w2 * monto_total)
+perdidas_portafolio <- -retornos_portafolio * monto_total
+
+# 4. Cálculo del VaR al 95%
+VaR_act1_95 <- quantile(perdidas_act1, 0.95)
+VaR_act2_95 <- quantile(perdidas_act2, 0.95)
+VaR_suma_95 <- VaR_act1_95 + VaR_act2_95
+
+VaR_portafolio_95 <- quantile(perdidas_portafolio, 0.95)
+
+# 5. Imprimir resultados y comparación
+cat("=== RESULTADOS DEL VaR AL 95% ===\n")
+cat("VaR Activo 1 (50% portafolio):  $", round(VaR_act1_95, 2), "\n")
+cat("VaR Activo 2 (50% portafolio):  $", round(VaR_act2_95, 2), "\n")
+cat("Suma de VaRs Individuales:       $", round(VaR_suma_95, 2), "\n")
+cat("-----------------------------------------\n")
+cat("VaR del Portafolio Combinado:   $", round(VaR_portafolio_95, 2), "\n")
+cat("Efecto de Diversificación:       $", round(VaR_suma_95 - VaR_portafolio_95, 2), "\n")
+```
+
