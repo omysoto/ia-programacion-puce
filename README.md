@@ -4,24 +4,33 @@
 - **Materia:** IA y Programación
 - **Institución:** Pontificia Universidad Católica del Ecuador y Escuela Politecnica Nacional (PUCE-EPN)
 - **Integrantes:** 
-  - Martín Valenzuela
-  - Naomi Soto
-  - Estibh Pullas
+    - Martín Valenzuela
+    - Naomy Soto
+    - Estibh Pullas
 - **Entorno de Trabajo:** Positron IDE, Quarto (`.qmd`), R (versión 4.6.1)
 
 ---
 
-## Descripción del Repositorio
-Este repositorio contiene la resolución de los ejercicios prácticos de clase sobre manipulación y visualización de datos.
+## Contenido para Calificación
+1. **Tarea Grupal:**
+   - **Archivo:** `Seguros_Vehiculares.qmd`
+   - **Descripción:** Contiene el desarrollo completo y código correspondiente a la tarea grupal asignada, basado en el dataset `Seguros_Vehiculares.csv`.
+
+2. **Ejercicios en Clase:**
+   - **Archivo:** `ejercicios_clase.qmd`
+   - **Descripción:** Contiene los ejercicios (Tema 1,2,3) prácticos desarrollados y programados en clase en lenguaje R.
 
 ### Estructura de Archivos
-- `ejercicios_clase.qmd`: Documento principal de Quarto con la solución de los Ejercicios 1, 2 y 3.
-- `ventas_base.csv`: Dataset principal utilizado para el análisis de ventas, fechas y regiones.
-- `renv.lock` / `.Rprofile`: Configuración del entorno reproducible del proyecto.
-
+- `Seguros_Vehiculares.qmd`: **[TAREA GRUPAL]** Documento Quarto con el análisis de seguros vehiculares.
+- `Seguros_Vehiculares.csv`: Dataset asociado a la tarea grupal.
+- `ejercicios_clase.qmd`: **[EJERCICIOS EN CLASE]** Solución de las prácticas de clase en R.
+- `ventas_base.csv`: Dataset secundario de prácticas de ventas, fechas y regiones.
+- `paises_temp.csv` / `paises_temp.xlsx`: Datasets de prácticas complementarias.
+- `requirements.txt`: Dependencias de Python.
+- `renv.lock` / `.Rprofile`: Configuración del entorno reproducible en R.
 ---
 
 ## Instrucciones de Ejecución
-1. Abrir el proyecto en Positron.
-2. Asegurar la restauración del entorno mediante `renv::restore()`.
-3. Abrir y ejecutar las celdas de código en `ejercicios_clase.qmd`.
+1. Abrir el proyecto en **Positron** (o RStudio).
+2. Asegurar la restauración del entorno ejecutando `renv::restore()` en la consola.
+3. Abrir el archivo `.qmd` que se requiera revisar (`Seguros_Vehiculares.qmd` o `ejercicios_clase.qmd`) y ejecutar las celdas de código.
