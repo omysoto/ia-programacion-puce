@@ -6,6 +6,7 @@
 - **Integrantes:** 
   - Martín Valenzuela
   - Naomi Soto
+  - Estibh Pullas
 - **Entorno de Trabajo:** Positron IDE, Quarto (`.qmd`), R (versión 4.6.1)
 
 ---

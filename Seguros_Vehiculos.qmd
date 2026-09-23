@@ -397,11 +397,10 @@ grid.arrange(p1, p2, p3, p4, ncol = 2)
 
 
 
-    ## 3. Matriz de infracciones y perfil familiar
+    ```{r visualizacion-infracciones, fig.width=14, fig.height=10}
+library(tidyverse)
+library(gridExtra)
 
-Genere heatmap o gráfico de dispersión evaluando relación entre suspensiones, experiencia y total reclamado.
-
-```{r visualizacion-infracciones, fig.width=14, fig.height=10}
 print("================================================================")
 print("FASE 3.3: MATRIZ DE INFRACCIONES Y PERFIL FAMILIAR")
 print("================================================================")
@@ -508,35 +507,4 @@ p10 <- ggplot(datos_seguros |> filter(TCuantia > 0),
   )
 
 grid.arrange(p8, p9, p10, ncol = 1, heights = c(1.2, 1.2, 1))
-
-# --- ANÁLISIS CUANTITATIVO ---
-print("================================================================")
-print("SEGMENTACIÓN POR PERFIL FAMILIAR")
-
-segmentacion <- datos_seguros |> 
-  filter(TCuantia > 0) |> 
-  group_by(Suspensiones, ConducenHijos) |> 
-  summarise(
-    N = n(),
-    Cuantia_Total = sum(TCuantia, na.rm = TRUE),
-    Cuantia_Promedio = mean(TCuantia, na.rm = TRUE),
-    Experiencia_Promedio = mean(Experiencia, na.rm = TRUE),
-    .groups = "drop"
-  ) |> 
-  mutate(
-    Suspensiones_txt = ifelse(Suspensiones == 1, "CON suspensiones", "SIN suspensiones"),
-    ConducenHijos_txt = ifelse(ConducenHijos == 1, "Sí conducen", "No conducen")
-  ) |> 
-  select(-Suspensiones, -ConducenHijos) |> 
-  arrange(desc(Cuantia_Total))
-
-print(segmentacion)
-
-cat("\n
-RECOMENDACIONES DE TARIFICACIÓN:
-═════════════════════════════════════════════════════════
-1. Suspensiones previas: ×1.40 factor multiplicador
-2. Conducción de hijos: ×1.15 factor multiplicador
-3. Combinado (Suspensiones + Hijos): ×1.60 factor multiplicador
-\n")
 ```
