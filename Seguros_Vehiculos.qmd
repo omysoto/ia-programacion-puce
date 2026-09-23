@@ -513,3 +513,137 @@ p10 <- ggplot(datos_seguros |> filter(TCuantia > 0),
 
 grid.arrange(p8, p9, p10, ncol = 1, heights = c(1.2, 1.2, 1))
 ```
+
+### 2. Comparación territorial y tipo de uso:
+
+```{r visualizacion-territorial-uso, fig.width=12, fig.height=8}
+# --- ASEGURAR CARGA DE LIBRERÍAS Y LIMPIEZA DE DATOS ---
+library(tidyverse)
+library(gridExtra)
+
+# Convertir TCuantia a formato numérico
+datos_seguros <- datos_seguros %>% 
+  mutate(
+    TCuantia = as.numeric(gsub("[\\$,]", "", TCuantia))
+  )
+
+# --- PREPARACIÓN DE DATOS Y MÉTRICAS AGREGADAS ---
+# Filtración de asegurados siniestrados y cálculo de indicadores clave por segmento
+siniestrados_zona_uso <- datos_seguros %>% 
+  filter(!is.na(TCuantia), TCuantia > 0) %>% 
+  group_by(Zona, Uso) %>% 
+  summarise(
+    Costo_Acumulado = sum(TCuantia, na.rm = TRUE),
+    Costo_Promedio = mean(TCuantia, na.rm = TRUE),
+    Mediana_Costo = median(TCuantia, na.rm = TRUE),
+    Total_Siniestros = n(),
+    .groups = "drop"
+  )
+
+print("--- Resumen Agregado de Siniestralidad por Zona y Uso ---")
+print(siniestrados_zona_uso)
+
+# --- GRÁFICO 1: COSTO ACUMULADO TOTAL (BARRAS COMPUESTAS) ---
+p1 <- ggplot(siniestrados_zona_uso, aes(x = Zona, y = Costo_Acumulado, fill = Uso)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(
+    aes(label = scales::label_number(prefix = "$", scale = 1e-6, suffix = "M", accuracy = 0.1)(Costo_Acumulado)),
+    position = position_dodge(width = 0.8),
+    vjust = -0.5,
+    fontface = "bold",
+    size = 3.5
+  ) +
+  labs(
+    title = "Costo Acumulado Total por Zona y Uso",
+    subtitle = "Comparación del volumen total reclamado (en Millones)",
+    x = "Zona Geográfica",
+    y = "Costo Acumulado (USD)",
+    fill = "Tipo de Uso"
+  ) +
+  scale_y_continuous(labels = scales::label_number(prefix = "$", scale = 1e-6, suffix = "M")) +
+  scale_fill_manual(values = c("Comercial" = "#2c3e50", "Privado" = "#e74c3c")) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 12), legend.position = "top")
+
+# --- GRÁFICO 2: DISTRIBUCIÓN DE SEVERIDAD (DIAGRAMA DE CAJAS EN ESCALA LOG) ---
+p2 <- datos_seguros %>% 
+  filter(!is.na(TCuantia), TCuantia > 0) %>% 
+  ggplot(aes(x = Zona, y = log1p(TCuantia), fill = Uso)) +
+  geom_boxplot(alpha = 0.7, outlier.size = 1, outlier.alpha = 0.3) +
+  labs(
+    title = "Distribución de Severidad por Reclamo (Escala log)",
+    subtitle = "Dispersión y mediana del costo individual por vehículo",
+    x = "Zona Geográfica",
+    y = "log(1 + Cuantía)",
+    fill = "Tipo de Uso"
+  ) +
+  scale_fill_manual(values = c("Comercial" = "#2c3e50", "Privado" = "#e74c3c")) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 12), legend.position = "top")
+
+# --- GRÁFICO 3: CUANTÍA PROMEDIO POR SINIESTRO ---
+p3 <- ggplot(siniestrados_zona_uso, aes(x = Zona, y = Costo_Promedio, fill = Uso)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(
+    aes(label = scales::label_number(prefix = "$", suffix = "k", scale = 1e-3, accuracy = 0.1)(Costo_Promedio)),
+    position = position_dodge(width = 0.8),
+    vjust = -0.5,
+    fontface = "bold",
+    size = 3.5
+  ) +
+  labs(
+    title = "Cuantía Promedio por Siniestro",
+    subtitle = "Severidad media individual según territorio y uso",
+    x = "Zona Geográfica",
+    y = "Costo Promedio (USD)",
+    fill = "Tipo de Uso"
+  ) +
+  scale_y_continuous(labels = scales::label_number(prefix = "$", scale = 1e-3, suffix = "k")) +
+  scale_fill_manual(values = c("Comercial" = "#3498db", "Privado" = "#2ecc71")) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 12), legend.position = "top")
+
+# --- GRÁFICO 4: FRECUENCIA TOTAL DE RECLAMACIONES ---
+p4 <- ggplot(siniestrados_zona_uso, aes(x = Zona, y = Total_Siniestros, fill = Uso)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(
+    aes(label = scales::comma(Total_Siniestros)),
+    position = position_dodge(width = 0.8),
+    vjust = -0.5,
+    fontface = "bold",
+    size = 3.5
+  ) +
+  labs(
+    title = "Número Total de Siniestros Reclamados",
+    subtitle = "Volumen de reclamaciones registradas por segmento",
+    x = "Zona Geográfica",
+    y = "Número de Reclamos",
+    fill = "Tipo de Uso"
+  ) +
+  scale_y_continuous(labels = scales::comma) +
+  scale_fill_manual(values = c("Comercial" = "#3498db", "Privado" = "#2ecc71")) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 12), legend.position = "top")
+
+# Renderizar panel de 2x2 mediante gridExtra
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+
+```
+
+Interpretación de los Gráficos: Comparación Territorial y Tipo de Uso
+
+1. En la ciudad hay muchos más accidentes (Paneles p1 y p4):
+
+En la zona Urbana se concentra la mayor cantidad de reclamos y el mayor gasto de la aseguradora. Tiene todo el sentido, ya que en la ciudad hay más tráfico y es mucho más probable tener un choque o un raspón que en la zona Rural.
+
+2. Los carros comerciales gastan mucho más que los privados:
+
+Tanto en la ciudad como en el campo, los vehículos de uso Comercial acumulan un costo total bastante más alto que los de uso Privado. Esto pasa porque están en la calle todo el día, recorren más kilómetros y, al estar más expuestos, terminan chocando más.
+
+3. Choques en la ciudad vs. choques en carretera (Paneles p2 y p3):
+
+Viendo el boxplot y los promedios, los carros comerciales suelen tener reclamos más caros por evento. Además, un dato curioso: aunque en la zona rural hay menos accidentes en total, cuando llega a pasar uno, el costo promedio por arreglo sale más caro, probablemente por la velocidad en carreteras.
+
+4. Recomendación para cobrar las pólizas:
+
+El grupo de riesgo más pesado para la empresa es Comercial - Urbano, porque junta muchos accidentes con montos acumulados altos. Lo ideal sería subirles un poco el valor de la prima o ajustar los deducibles a los carros comerciales para que la aseguradora no salga perdiendo.
