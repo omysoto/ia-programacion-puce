@@ -526,6 +526,7 @@ Viendo el boxplot y los promedios, los carros comerciales suelen tener reclamos 
 4. Recomendación para cobrar las pólizas:
 
 El grupo de riesgo más pesado para la empresa es Comercial - Urbano, porque junta muchos accidentes con montos acumulados altos. Lo ideal sería subirles un poco el valor de la prima o ajustar los deducibles a los carros comerciales para que la aseguradora no salga perdiendo.
+
 ### 3. Matriz de infraciones y perfil familiar:
 ```{r visualizacion-infracciones, fig.width=14, fig.height=10}
 library(tidyverse)
