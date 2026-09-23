@@ -393,3 +393,150 @@ grid.arrange(p1, p2, p3, p4, ncol = 2)
     Mitigación de valores extremos: La transformación logarítmica es indispensable en la ciencia actuarial porque evita que los siniestros catastróficos dominen visual y matemáticamente el análisis de riesgo.
 
     Legibilidad analítica: Permite estabilizar la varianza y visualizar con total claridad la densidad real de los datos, facilitando la construcción posterior de modelos predictivos de precios y reservas para la compañía de seguros.
+
+
+
+
+    ## 3. Matriz de infracciones y perfil familiar
+
+Genere heatmap o gráfico de dispersión evaluando relación entre suspensiones, experiencia y total reclamado.
+
+```{r visualizacion-infracciones, fig.width=14, fig.height=10}
+print("================================================================")
+print("FASE 3.3: MATRIZ DE INFRACCIONES Y PERFIL FAMILIAR")
+print("================================================================")
+
+# Datos agregados para heatmap
+datos_heatmap <- datos_seguros |> 
+  filter(TCuantia > 0) |> 
+  mutate(
+    Suspensiones_etiqueta = ifelse(Suspensiones == 1, "CON suspensiones", "SIN suspensiones"),
+    ConducenHijos_etiqueta = ifelse(ConducenHijos == 1, "Sí conducen", "No conducen")
+  ) |> 
+  group_by(Rango_Experiencia, Suspensiones_etiqueta, ConducenHijos_etiqueta) |> 
+  summarise(
+    N_Siniestros = n(),
+    Cuantia_Total = sum(TCuantia, na.rm = TRUE),
+    Cuantia_Promedio = mean(TCuantia, na.rm = TRUE),
+    Frecuencia_Promedio = mean(NSiniestros, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+print("Tabla: Segmentación por Experiencia, Suspensiones e Hijos")
+print(datos_heatmap |> arrange(desc(Cuantia_Total)))
+
+# --- GRÁFICO 1: HEATMAP CUANTÍA TOTAL ---
+p8 <- ggplot(datos_heatmap, 
+  aes(x = Rango_Experiencia, y = Suspensiones_etiqueta, fill = Cuantia_Total)) +
+  geom_tile(color = "black", linewidth = 0.5) +
+  geom_text(
+    aes(label = paste("$", round(Cuantia_Total / 1e6, 1), "M", sep = "")),
+    color = "black", size = 3.5, fontface = "bold"
+  ) +
+  facet_wrap(~ ConducenHijos_etiqueta) +
+  scale_fill_gradient(low = "#ecf0f1", high = "#c0392b",
+                      labels = scales::label_number(prefix = "$", scale = 1e-6, suffix = "M")) +
+  labs(
+    title = "Heatmap: Cuantía Total Reclamada",
+    subtitle = "Por Experiencia, Suspensiones y Conducción de Hijos",
+    x = "Rango de Experiencia",
+    y = "Suspensiones",
+    fill = "Cuantía Total"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.text = element_text(face = "bold"),
+    legend.position = "bottom"
+  )
+
+# --- GRÁFICO 2: HEATMAP FRECUENCIA ---
+p9 <- ggplot(datos_heatmap, 
+  aes(x = Rango_Experiencia, y = Suspensiones_etiqueta, fill = Frecuencia_Promedio)) +
+  geom_tile(color = "black", linewidth = 0.5) +
+  geom_text(
+    aes(label = round(Frecuencia_Promedio, 2)),
+    color = ifelse(datos_heatmap$Frecuencia_Promedio > 1.5, "white", "black"),
+    size = 3.5, fontface = "bold"
+  ) +
+  facet_wrap(~ ConducenHijos_etiqueta) +
+  scale_fill_gradient(low = "#ecf0f1", high = "#27ae60") +
+  labs(
+    title = "Heatmap: Frecuencia Promedio de Siniestros",
+    x = "Rango de Experiencia",
+    y = "Suspensiones",
+    fill = "Frecuencia Promedio"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.text = element_text(face = "bold"),
+    legend.position = "bottom"
+  )
+
+# --- GRÁFICO 3: DISPERSIÓN ---
+p10 <- ggplot(datos_seguros |> filter(TCuantia > 0), 
+  aes(x = Experiencia, y = TCuantia)) +
+  geom_jitter(
+    aes(color = factor(Suspensiones), shape = factor(ConducenHijos)),
+    alpha = 0.5, size = 2.5, width = 0.3, height = 0
+  ) +
+  scale_color_manual(
+    name = "Suspensiones",
+    values = c("0" = "#3498db", "1" = "#e74c3c"),
+    labels = c("0" = "Sin suspensiones", "1" = "Con suspensiones")
+  ) +
+  scale_shape_manual(
+    name = "Conducen Hijos",
+    values = c("0" = 16, "1" = 17),
+    labels = c("0" = "No", "1" = "Sí")
+  ) +
+  scale_y_log10(labels = scales::label_number(prefix = "$", scale = 1e-3, suffix = "k")) +
+  labs(
+    title = "Dispersión: Experiencia vs Cuantía (escala log)",
+    subtitle = "Color = Suspensiones | Forma = Conducción de Hijos",
+    x = "Años de Experiencia",
+    y = "Cuantía Reclamada (USD, log)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    legend.position = "bottom",
+    panel.grid.minor = element_blank()
+  )
+
+grid.arrange(p8, p9, p10, ncol = 1, heights = c(1.2, 1.2, 1))
+
+# --- ANÁLISIS CUANTITATIVO ---
+print("================================================================")
+print("SEGMENTACIÓN POR PERFIL FAMILIAR")
+
+segmentacion <- datos_seguros |> 
+  filter(TCuantia > 0) |> 
+  group_by(Suspensiones, ConducenHijos) |> 
+  summarise(
+    N = n(),
+    Cuantia_Total = sum(TCuantia, na.rm = TRUE),
+    Cuantia_Promedio = mean(TCuantia, na.rm = TRUE),
+    Experiencia_Promedio = mean(Experiencia, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  mutate(
+    Suspensiones_txt = ifelse(Suspensiones == 1, "CON suspensiones", "SIN suspensiones"),
+    ConducenHijos_txt = ifelse(ConducenHijos == 1, "Sí conducen", "No conducen")
+  ) |> 
+  select(-Suspensiones, -ConducenHijos) |> 
+  arrange(desc(Cuantia_Total))
+
+print(segmentacion)
+
+cat("\n
+RECOMENDACIONES DE TARIFICACIÓN:
+═════════════════════════════════════════════════════════
+1. Suspensiones previas: ×1.40 factor multiplicador
+2. Conducción de hijos: ×1.15 factor multiplicador
+3. Combinado (Suspensiones + Hijos): ×1.60 factor multiplicador
+\n")
+```
