@@ -396,7 +396,7 @@ grid.arrange(p1, p2, p3, p4, ncol = 2)
 
 ### 2. Comparación territorial y tipo de Uso:
 ```{r visualizacion-territorial-uso, fig.width=12, fig.height=8}
-# --- ASEGURAR CARGA DE LIBRERÍAS Y LIMPIEZA DE DATOS ---
+# --- CARGA DE LIBRERÍAS Y LIMPIEZA DE DATOS ---
 library(tidyverse)
 library(gridExtra)
 
@@ -509,23 +509,23 @@ grid.arrange(p1, p2, p3, p4, ncol = 2)
 
 ```
 
-Interpretación de los Gráficos: Comparación Territorial y Tipo de Uso
+**Interpretación de los Gráficos: Comparación Territorial y Tipo de Uso**
 
 1. En la ciudad hay muchos más accidentes (Paneles p1 y p4):
 
-En la zona Urbana se concentra la mayor cantidad de reclamos y el mayor gasto de la aseguradora. Tiene todo el sentido, ya que en la ciudad hay más tráfico y es mucho más probable tener un choque o un raspón que en la zona Rural.
+    En la zona Urbana se concentra la mayor cantidad de reclamos y el mayor gasto de la aseguradora. Tiene todo el sentido, ya que en la ciudad hay más tráfico y es mucho más probable tener un choque o un raspón que en la zona Rural.
 
 2. Los carros comerciales gastan mucho más que los privados:
 
-Tanto en la ciudad como en el campo, los vehículos de uso Comercial acumulan un costo total bastante más alto que los de uso Privado. Esto pasa porque están en la calle todo el día, recorren más kilómetros y, al estar más expuestos, terminan chocando más.
+    Tanto en la ciudad como en el campo, los vehículos de uso Comercial acumulan un costo total bastante más alto que los de uso Privado. Esto pasa porque están en la calle todo el día, recorren más kilómetros y, al estar más expuestos, terminan chocando más.
 
 3. Choques en la ciudad vs. choques en carretera (Paneles p2 y p3):
 
-Viendo el boxplot y los promedios, los carros comerciales suelen tener reclamos más caros por evento. Además, un dato curioso: aunque en la zona rural hay menos accidentes en total, cuando llega a pasar uno, el costo promedio por arreglo sale más caro, probablemente por la velocidad en carreteras.
+    Viendo el boxplot y los promedios, los carros comerciales suelen tener reclamos más caros por evento. Además, un dato curioso: aunque en la zona rural hay menos accidentes en total, cuando llega a pasar uno, el costo promedio por arreglo sale más caro, probablemente por la velocidad en carreteras.
 
 4. Recomendación para cobrar las pólizas:
 
-El grupo de riesgo más pesado para la empresa es Comercial - Urbano, porque junta muchos accidentes con montos acumulados altos. Lo ideal sería subirles un poco el valor de la prima o ajustar los deducibles a los carros comerciales para que la aseguradora no salga perdiendo.
+    El grupo de riesgo más pesado para la empresa es Comercial - Urbano, porque junta muchos accidentes con montos acumulados altos. Lo ideal sería subirles un poco el valor de la prima o ajustar los deducibles a los carros comerciales para que la aseguradora no salga perdiendo.
 
 ### 3. Matriz de infraciones y perfil familiar:
 ```{r visualizacion-infracciones, fig.width=14, fig.height=10}
@@ -640,3 +640,20 @@ p10 <- ggplot(datos_seguros |> filter(TCuantia > 0),
 grid.arrange(p8, p9, p10, ncol = 1, heights = c(1.2, 1.2, 1))
 ```
 
+**Interpretación**
+1. Impacto Financiero por Volumen - Heatmap Superior: 
+
+    La mayor pérdida monetaria acumulada se concentra en los conductores menos experimentados ("Novato < 5 años" e "Intermedio 5-15 años") que no tienen suspensiones y cuyos hijos no conducen, alcanzando picos masivos de $134.2 millones y $123.7 millones respectivamente. Esto ocurre debido al volumen abrumador de asegurados en estos segmentos demográficos dentro de la cartera.   
+
+2. Frecuencia Crítica de Siniestros - Heatmap Central: 
+
+    Al evaluar la probabilidad o frecuencia promedio de choques, el comportamiento cambia. El índice de riesgo individual más alto (2.27 choques en promedio) se registra en los conductores "Novatos" con suspensiones previas y donde los hijos sí conducen, evidenciando una acumulación de factores de riesgo (inexperiencia, mal historial y uso compartido).   
+
+3. Severidad y Riesgo Moral - Gráfico de Dispersión Inferior:
+
+    El diagrama de dispersión de puntos muestra que los registros en color rojo ("Con suspensiones") se concentran de manera densa en las franjas más altas de cuantía reclamada (superando los $10k y rozando los $30k) a lo largo de los distintos rangos de experiencia. 
+    Esto demuestra que los infractores reincidentes no solo chocan más, sino que sus siniestros son económicamente más destructivos. 
+
+*4. Conclusión*: El análisis multivariable revela que el riesgo de la cartera responde a una dualidad operativa: 
+
+    Mientras que el volumen financiero de pérdidas es arrastrado por masas de conductores jóvenes e intermedios sin multas previas por un efecto puramente demográfico, la severidad extrema y la reincidencia están firmemente ancladas al historial de suspensiones y a la exposición familiar. La política de suscripción y precios de la compañía debe dejar de tarificar basándose únicamente en la experiencia y aplicar recargos severos a las pólizas que combinen antecedentes de infracciones con la habilitación de conductores secundarios jóvenes
