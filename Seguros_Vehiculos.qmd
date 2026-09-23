@@ -394,6 +394,14 @@ grid.arrange(p1, p2, p3, p4, ncol = 2)
 
     Legibilidad analítica: Permite estabilizar la varianza y visualizar con total claridad la densidad real de los datos, facilitando la construcción posterior de modelos predictivos de precios y reservas para la compañía de seguros.
 
+### 2. Comparación territorial y tipo de Uso:
+
+
+
+
+
+
+### 3. Matriz de infraciones y perfil familiar:
 ```{r visualizacion-infracciones, fig.width=14, fig.height=10}
 library(tidyverse)
 library(gridExtra)
