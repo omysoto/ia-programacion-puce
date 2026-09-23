@@ -1,13 +1,17 @@
-Version: 1.0
 
-RestoreWorkspace: Default
-SaveWorkspace: Default
-AlwaysSaveHistory: Default
+set.seed(5)
 
-EnableCodeIndexing: Yes
-UseSpacesForTab: Yes
-NumSpacesForTab: 2
-Encoding: UTF-8
+valor_portafolio <- 100000        # valor inicial del portafolio
+retorno_medio    <- 0.0008        # retorno diario promedio esperado
+volatilidad      <- 0.018         # desviación estándar diaria (riesgo)
+n_simulaciones   <- 10000
 
-RnwWeave: Sweave
-LaTeX: pdfLaTeX
+retornos_simulados <- rnorm(n_simulaciones, mean = retorno_medio, sd = volatilidad)
+valores_simulados  <- valor_portafolio * (1 + retornos_simulados)
+perdidas_ganancias <- valores_simulados - valor_portafolio
+
+VaR_95 <- -quantile(perdidas_ganancias, probs = 0.05)
+VaR_99 <- -quantile(perdidas_ganancias, probs = 0.01)
+
+cat("VaR al 95% (1 día):", scales::dollar(VaR_95), "\n")
+
