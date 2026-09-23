@@ -4,9 +4,9 @@
 - **Materia:** IA y Programación
 - **Institución:** Pontificia Universidad Católica del Ecuador y Escuela Politecnica Nacional (PUCE-EPN)
 - **Integrantes:** 
-    - Martín Valenzuela
-    - Naomy Soto
-    - Estibh Pullas
+    - Martín Valenzuela / usuario: martinalejo99vb-gif
+    - Naomy Soto / usuario: omysoto
+    - Estibh Pullas / usuario: Doblee777
 - **Entorno de Trabajo:** Positron IDE, Quarto (`.qmd`), R (versión 4.6.1)
 
 ---
